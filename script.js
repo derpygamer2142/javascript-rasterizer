@@ -1,3 +1,4 @@
+const { GPU } = require('gpu.js');
 const canv = document.getElementById("screen");
 const ctx = canv.getContext("2d");
 
