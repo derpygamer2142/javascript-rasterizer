@@ -69,7 +69,7 @@ const project = gpu.createKernel(function(coords,FOV) {
 
 
 const rotate = gpu.createKernel(function(coords,coordsb,matrix) {
-    return ((matrix[this.thread.x]*coords[0]) + (matrix[this.thread.x+1]*coords[1]) + (matrix[this.thread.x+2]*coords[2])) + coordsb[this.thread.x]
+    return ((matrix[this.thread.x*3]*coords[0]) + (matrix[(this.thread.x*3) + 1]*coords[1]) + (matrix[(this.thread.x*3) + 2]*coords[2])) + coordsb[this.thread.x]
 
 }).setOutput([3])
 
@@ -118,7 +118,7 @@ const genRotationMatrix = gpu.createKernel(function(rotation) {
 }).setOutput([9])
 
 const normalize = gpu.createKernel(function(vec) {
-    return ((vec[this.thread.x] ** 2) / (vec[0]**2 + vec[1]**2 + vec[2]**2))
+    return (vec[this.thread.x] / Math.sqrt(vec[0]**2 + vec[1]**2 + vec[2]**2))
 }).setOutput([3])
 
 const addVects = gpu.createKernel(function(vec1,vec2) {
@@ -128,6 +128,10 @@ const addVects = gpu.createKernel(function(vec1,vec2) {
 const multVect = gpu.createKernel(function(vec,scalar) {
     return vec[this.thread.x]*scalar
 }).setOutput([3])
+
+const dot = gpu.createKernel(function(a,b) {
+    return ((a[0]*b[0]) + (a[1]*b[1]) + (a[2]*b[2]))
+}).setOutput([1])
 
 // const multiplyMatrix = gpu.createKernel(function(a, b) {
 //     let sum = 0;

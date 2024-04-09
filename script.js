@@ -85,25 +85,27 @@ let SPEED = 15
 function main() {
     dt = (Date.now()/1000) - lastTime
     lastTime = Date.now()/1000
-    // let heldVec = [((+ input.d) - (+ input.a)), ((+ input.e) - (+ input.q)), ((+ input.w) - (+ input.s))]
-    // if (heldVec[0] + heldVec[1] + heldVec[2] != 0) {
-    //     heldVec = m3d.normalize(heldVec)
-    //     heldVec = m3d.multVect(heldVec,dt*SPEED)
-    //     //console.log(m3d.addVects(camPos,heldVec))
-    //     camPos = [camPos[0]+heldVec[0],camPos[1]+heldVec[1],camPos[2]+heldVec[2]]
-    // } 
-    camPos[0] += ((+ input.d) - (+ input.a)) * dt * SPEED
-    camPos[1] += ((+ input.e) - (+ input.q)) * dt * SPEED
-    camPos[2] += ((+ input.w) - (+ input.s)) * dt * SPEED
-    camRotation[0] += ((+ input.ArrowUp) - (+ input.ArrowDown)) * dt * SPEED*2 * TORAD
-    camRotation[1] += ((+ input.ArrowRight) - (+ input.ArrowLeft)) * dt * SPEED*2 * TORAD
+    let heldVec = [((+ input.a) - (+ input.d)), ((+ input.q) - (+ input.e)), ((+ input.s) - (+ input.w))]
+    if ((Math.abs(heldVec[0]) + Math.abs(heldVec[1]) + Math.abs(heldVec[2])) != 0) {
+        heldVec = m3d.normalize(heldVec)
+        heldVec = m3d.multVect(heldVec,dt*SPEED)
+        //console.log(m3d.addVects(camPos,heldVec))
+        camPos = [camPos[0]+heldVec[0],camPos[1]+heldVec[1],camPos[2]+heldVec[2]]
+    } 
+    // camPos[0] += ((+ input.d) - (+ input.a)) * dt * SPEED
+    // camPos[1] += ((+ input.e) - (+ input.q)) * dt * SPEED
+    // camPos[2] += ((+ input.w) - (+ input.s)) * dt * SPEED
+    camRotation[0] -= ((+ input.ArrowRight) - (+ input.ArrowLeft)) * dt * SPEED*2 * TORAD // left/right
+    camRotation[1] += ((+ input.ArrowUp) - (+ input.ArrowDown)) * dt * SPEED*2 * TORAD // up/down
+    camRotation[2] += ((+ input.m) - (+ input.n)) * dt * SPEED*2 * TORAD // roll
+    
 
     const camMatrix = m3d.genRotationMatrix(camRotation)
     //console.log(m3d.genRotationMatrix(camRotation))
 
     let toDraw = [...toProject]
     for (let i = 0; i < toProject.length; i++) {
-        toDraw[i] = [toDraw[i][0] - camPos[0],toDraw[i][1] - camPos[1],toDraw[i][2] - camPos[2]]
+        //toDraw[i] = [toDraw[i][0] - camPos[0],toDraw[i][1] - camPos[1],toDraw[i][2] - camPos[2]]
         toDraw[i] = m3d.rotate(toDraw[i],camPos,camMatrix)
         // toDraw[i][1] -= camPos[1]
         // toDraw[i][2] -= camPos[2]
@@ -113,10 +115,11 @@ function main() {
     ctx.fillRect(0,0,WIDTH,HEIGHT)
     ctx.fillStyle = "black"
     fillTri(m3d.project(toDraw[0],FOV),m3d.project(toDraw[1],FOV),m3d.project(toDraw[2],FOV))
+    //fillTri(m3d.project(m3d.rotate([-25,0,45],camPos,camMatrix),FOV),m3d.project(m3d.rotate([0,25,45],camPos,camMatrix),FOV),m3d.project(m3d.rotate([25,0,45],camPos,camMatrix),FOV))
     //fillTri([-25,0],[0,25],[200,0])
     //console.log(m3d.project(toDraw[1],FOV))
-    //console.log(toDraw[1][2]*camMatrix[2])
-    console.log(toDraw[1][0]*camMatrix[0]+toDraw[1][1]*camMatrix[1]+toDraw[1][2]*camMatrix[2],toDraw[1][0]*camMatrix[3]+toDraw[1][1]*camMatrix[4]+toDraw[1][2]*camMatrix[5])
+    //console.log(toDraw)
+    //console.log(/*toDraw[1][0]*camMatrix[0]+toDraw[1][1]*camMatrix[1]+toDraw[1][2]*camMatrix[2],toDraw[1][0]*camMatrix[3],*/toDraw[1][1]*camMatrix[4]/*,toDraw[1][2]*camMatrix[5]*/)
 
     ctx.font = `${HEIGHT*0.045}px Comic Sans MS`
     printLines(["Cam pos: " + camPos.join(", "), "Cam rotation " + camRotation.join(", "), "DT: " + dt.toFixed(2),"FPS: " + (1/dt).toFixed(2), "Rot matrix " + camMatrix.join(" ")],0,HEIGHT*0.95,HEIGHT*0.045)

@@ -7,6 +7,8 @@ export default class Input {
         this.d = false;
         this.e = false
         this.q = false
+        this.n = false
+        this.m = false
         this.initInput();
         this.ArrowUp = false
         this.ArrowDown = false
