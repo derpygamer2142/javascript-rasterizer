@@ -1,3 +1,6 @@
+const canv = document.getElementById("screen");
+const ctx = canv.getContext("2d");
+
 const gpu = new GPU.GPU();
 const settings = {
     output: [2]
@@ -133,6 +136,47 @@ const dot = gpu.createKernel(function(a,b) {
     return ((a[0]*b[0]) + (a[1]*b[1]) + (a[2]*b[2]))
 }).setOutput([1])
 
+const edge = gpu.createKernel(function(a,b,c) {
+    return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+}).setOutput([1])
+
+const internalTri = gpu.createKernel(function(a,b,c,color) {
+    // https://jtsorlinis.github.io/rendering-tutorial/
+    function edge(c,b,a) {
+        return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+        
+    }
+    const minX = Math.min(Math.min(a[0],b[0]),c[0])
+    const minY = Math.min(Math.min(a[1],b[1]),c[1])
+
+    let ABP = edge(a,b,[this.thread.x+minX,this.thread.y+minY])
+    let BCP = edge(b,c,[this.thread.x+minX,this.thread.y+minY])
+    let CAP = edge(c,a,[this.thread.x+minX,this.thread.y+minY])
+    if (ABP >= 0 && BCP >= 0 && CAP >= 0) {
+        //this.color(0,0,0)
+        let col = [color[0],color[1],color[2]]
+        return col
+    }
+    //this.color(1,1,1)
+    return [255,255,255]
+
+},{
+    constants: { size: 5 },
+    output: [5, 5],
+    dynamicOutput: true,
+})//.setGraphical(true)
+
+function drawTri(a,b,c,color) {
+    //internalTri.setOutput([5,5])
+    let [x, y] = [Math.floor(Math.max(a[0],b[0],c[0])-Math.min(a[0],b[0],c[0])),Math.floor(Math.max(a[1],b[1],c[1])-Math.min(a[1],b[1],c[1]))]
+    internalTri.setOutput([x,y])
+    //internalTri(a,b,c,color)
+    //return internalTri.getPixels()
+    return [internalTri(a,b,c,color),x,y,internalTri.output]
+
+}
+
+
 // const multiplyMatrix = gpu.createKernel(function(a, b) {
 //     let sum = 0;
 //     for (let i = 0; i < 2; i++) {
@@ -147,4 +191,4 @@ const dot = gpu.createKernel(function(a,b) {
 
 
 
-export { project, rotate, genRotationMatrix, normalize, addVects, multVect }; // note to self: typescript formatter doesn't like it if you use export {func as "string"}
+export { project, rotate, genRotationMatrix, normalize, addVects, multVect, drawTri, edge, dot }; // note to self: typescript formatter doesn't like it if you use export {func as "string"}

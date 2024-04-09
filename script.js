@@ -10,6 +10,8 @@ const input = new Input()
 const canv = document.getElementById("screen");
 const ctx = canv.getContext("2d");
 
+const CALCWIDTH = 1920
+const CALCHEIGHT = 1080
 const WIDTH = window.innerWidth;
 const HEIGHT = window.innerHeight;
 const HALFW = WIDTH/2
@@ -19,19 +21,19 @@ canv.height = HEIGHT
 console.log(WIDTH, HEIGHT)
 
 function toOriginX(x) {
-    return x - HALFW
+    return ((x - HALFW)/CALCWIDTH) * WIDTH
 }
 
 function toOriginY(y) {
-    return y - HALFH
+    return ((y - HALFH)/CALCHEIGHT) * HEIGHT
 }
 
 function toScreenX(x) {
-    return x + HALFW
+    return ((x/WIDTH)*CALCWIDTH) + HALFW
 }
 
 function toScreenY(y) {
-    return HALFH - y
+    return HALFH - ((y/HEIGHT)*CALCHEIGHT)
 }
 
 function toScreen(coords) {
@@ -111,10 +113,18 @@ function main() {
         // toDraw[i][2] -= camPos[2]
     }
     //console.log(toDraw)
+    
     ctx.fillStyle = "white"
     ctx.fillRect(0,0,WIDTH,HEIGHT)
     ctx.fillStyle = "black"
-    fillTri(m3d.project(toDraw[0],FOV),m3d.project(toDraw[1],FOV),m3d.project(toDraw[2],FOV))
+    let projected = []
+    for (let i = 0; i < toDraw.length; i += 3) {
+        projected.push([m3d.project(toDraw[i],FOV),m3d.project(toDraw[i+1],FOV),m3d.project(toDraw[i+2],FOV)])
+    }
+    fillTri(projected[0][0],projected[0][1],projected[0][2])
+    //m3d.drawTri(projected[0][0],projected[0][1],projected[0][2],[0,0,0])
+    //console.log(m3d.drawTri(projected[0][0],projected[0][1],projected[0][2],[0,0,0]))
+    // fillTri(m3d.project(toDraw[0],FOV),m3d.project(toDraw[1],FOV),m3d.project(toDraw[2],FOV))
     //fillTri(m3d.project(m3d.rotate([-25,0,45],camPos,camMatrix),FOV),m3d.project(m3d.rotate([0,25,45],camPos,camMatrix),FOV),m3d.project(m3d.rotate([25,0,45],camPos,camMatrix),FOV))
     //fillTri([-25,0],[0,25],[200,0])
     //console.log(m3d.project(toDraw[1],FOV))
@@ -122,7 +132,7 @@ function main() {
     //console.log(/*toDraw[1][0]*camMatrix[0]+toDraw[1][1]*camMatrix[1]+toDraw[1][2]*camMatrix[2],toDraw[1][0]*camMatrix[3],*/toDraw[1][1]*camMatrix[4]/*,toDraw[1][2]*camMatrix[5]*/)
 
     ctx.font = `${HEIGHT*0.045}px Comic Sans MS`
-    printLines(["Cam pos: " + camPos.join(", "), "Cam rotation " + camRotation.join(", "), "DT: " + dt.toFixed(2),"FPS: " + (1/dt).toFixed(2), "Rot matrix " + camMatrix.join(" ")],0,HEIGHT*0.95,HEIGHT*0.045)
+    printLines([`Cam pos: ${camPos[0].toFixed(2)}, ${camPos[1].toFixed(2)}, ${camPos[2].toFixed(2)}`, `Cam rotation ${camRotation[0].toFixed(2)}, ${camRotation[1].toFixed(2)}, ${camRotation[2].toFixed(2)}`, "DT: " + dt.toFixed(2),"FPS: " + (1/dt).toFixed(2)],0,HEIGHT*0.95,HEIGHT*0.045)
     //console.log(toProject[0])
 }
 
