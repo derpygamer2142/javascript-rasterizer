@@ -64,7 +64,7 @@ const project = gpu.createKernel(function(coords,FOV) {
     */
     let onedivz = 1/coords[2]
     return (FOV*coords[this.thread.x])*onedivz
-}, settings)
+}).setOutput([2])
 
 
 
@@ -118,7 +118,7 @@ const genRotationMatrix = gpu.createKernel(function(rotation) {
 }).setOutput([9])
 
 const normalize = gpu.createKernel(function(vec) {
-    return ((vec[this.thread.x] ** 2) / (vec[0] + vec[1] + vec[2]))
+    return ((vec[this.thread.x] ** 2) / (vec[0]**2 + vec[1]**2 + vec[2]**2))
 }).setOutput([3])
 
 const addVects = gpu.createKernel(function(vec1,vec2) {
