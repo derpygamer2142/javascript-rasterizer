@@ -109,6 +109,7 @@ function main() {
     for (let i = 0; i < toProject.length; i++) {
         //toDraw[i] = [toDraw[i][0] - camPos[0],toDraw[i][1] - camPos[1],toDraw[i][2] - camPos[2]]
         toDraw[i] = m3d.rotate(toDraw[i],camPos,camMatrix)
+        // toDraw[i].push()
         // toDraw[i][1] -= camPos[1]
         // toDraw[i][2] -= camPos[2]
     }
@@ -121,8 +122,8 @@ function main() {
     for (let i = 0; i < toDraw.length; i += 3) {
         projected.push([m3d.project(toDraw[i],FOV),m3d.project(toDraw[i+1],FOV),m3d.project(toDraw[i+2],FOV)])
     }
-    fillTri(projected[0][0],projected[0][1],projected[0][2])
-    
+    //fillTri(projected[0][0],projected[0][1],projected[0][2])
+    console.log(toDraw)
 
     ctx.font = `${HEIGHT*0.045}px Comic Sans MS`
     printLines([`Cam pos: ${camPos[0].toFixed(2)}, ${camPos[1].toFixed(2)}, ${camPos[2].toFixed(2)}`, `Cam rotation ${camRotation[0].toFixed(2)}, ${camRotation[1].toFixed(2)}, ${camRotation[2].toFixed(2)}`, "DT: " + dt.toFixed(2),"FPS: " + (1/dt).toFixed(2)],0,HEIGHT*0.95,HEIGHT*0.045)

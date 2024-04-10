@@ -152,7 +152,7 @@ gpu.addFunction(function edge(c,b,a) {
 })
 
 gpu.addFunction(function pixel(a,b,c,p,pa,pb,pc) {
-    // [depth,ABP,BCP,CAP]
+    // [depth, u, v, third one]
     const minX = Math.min(Math.min(pa[0],pb[0]),pc[0])
     const minY = Math.min(Math.min(pa[1],pb[1]),pc[1])
     const maxX = Math.max(Math.max(pa[0],pb[0]),pc[0])
@@ -163,7 +163,11 @@ gpu.addFunction(function pixel(a,b,c,p,pa,pb,pc) {
         let BCP = edge(b,c,p)
         let CAP = edge(c,a,p)
         if (ABP >= 0 && BCP >= 0 && CAP >= 0) {
-            
+            let u = ABP/ABC
+            let v = CAP/ABC
+            let idk = BCP/ABC // what letter would this be
+            let depth = u * v * idk * a[2] * b[2] * c[2]
+            return [depth, ABP, BCP, CAP]
         }
         else {
             return [-1, -1, -1, -1]
@@ -176,28 +180,29 @@ gpu.addFunction(function pixel(a,b,c,p,pa,pb,pc) {
     
 })
 
-const internalTri = gpu.createKernel(function(a,b,c,color) {
-    // https://jtsorlinis.github.io/rendering-tutorial/
-    
-    const minX = Math.min(Math.min(a[0],b[0]),c[0])
-    const minY = Math.min(Math.min(a[1],b[1]),c[1])
+// const genDepthBuffer = gpu.createFunction(function(triangles) {
+//     /*
+//     triangle list format
+//     [
+//         [
+//             [x1, y1, z1, px1, py1],
+//             [x2, y2, z2, px2, py2],
+//             [x3, y3, z3, px3, py3],
+//         ],
+//         [
+//             coords...
+//         ],
+//         ...
+//     ]
+//     */
 
-    let ABP = edge(a,b,[this.thread.x+minX,this.thread.y+minY])
-    let BCP = edge(b,c,[this.thread.x+minX,this.thread.y+minY])
-    let CAP = edge(c,a,[this.thread.x+minX,this.thread.y+minY])
-    if (ABP >= 0 && BCP >= 0 && CAP >= 0) {
-        //this.color(0,0,0)
-        let col = [color[0],color[1],color[2]]
-        return col
-    }
-    //this.color(1,1,1)
-    return [-1,-1,-1]
 
-},{
-    constants: { size: 5 },
-    output: [5, 5],
-    dynamicOutput: true,
-})//.setGraphical(true)
+
+
+// }, {
+//     dynamicOutput: true,
+//     output: [5,5]
+// })
 
 
 
