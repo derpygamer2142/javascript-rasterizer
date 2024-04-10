@@ -1,14 +1,17 @@
 import * as m3d from "./3dshit.js"
 import Input from "./input.js";
+let canv = document.getElementById("screen");
+let ctx = canv.getContext("2d");
 
-const gpu = new GPU.GPU();
+const gpu = new GPU.GPU({
+    canvas: canv
+});
 const input = new Input()
 
 
 
 
-const canv = document.getElementById("screen");
-const ctx = canv.getContext("2d");
+
 
 const CALCWIDTH = 1920
 const CALCHEIGHT = 1080
@@ -115,9 +118,7 @@ function main() {
         
     }
     m3d.genDepthBuffer(toDraw,WIDTH,HEIGHT,true)
-    //console.log(m3d.genDepthBuffer(toDraw,5,5))
-    //console.log(m3d.pixel(toDraw[0],toDraw[1],toDraw[2],[0,0],toDraw[0].slice(3),toDraw[1].slice(3),toDraw[2].slice(3)))
-    ctx.font = `${HEIGHT*0.045}px Comic Sans MS`
+    
     printLines([`Cam pos: ${camPos[0].toFixed(2)}, ${camPos[1].toFixed(2)}, ${camPos[2].toFixed(2)}`, `Cam rotation ${camRotation[0].toFixed(2)}, ${camRotation[1].toFixed(2)}, ${camRotation[2].toFixed(2)}`, "DT: " + dt.toFixed(2),"FPS: " + (1/dt).toFixed(2)],0,HEIGHT*0.95,HEIGHT*0.045)
 
 }

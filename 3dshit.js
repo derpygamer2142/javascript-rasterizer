@@ -1,7 +1,13 @@
 // warning: this code is messing and contains 1 more peter griffin than you will find in your average js file
 
-const canv = document.getElementById("screen");
-const ctx = canv.getContext("2d");
+
+
+
+
+let canv = document.getElementById("screen");
+let ctx = canv.getContext("2d", {
+    willReadFrequently: true
+});
 
 const gpu = new GPU.GPU();
 const settings = {
@@ -235,7 +241,7 @@ const intGenDepthBuffer = gpu.createKernel(function(triangles,length,width,heigh
 function genDepthBuffer(triangles,width,height) {
     intGenDepthBuffer.setOutput([width,height]) // make the function size dynamic
     intGenDepthBuffer(triangles,triangles.length,width,height)
-    canv.replaceWith(intGenDepthBuffer.canvas)
+    ctx.putImageData(new ImageData(intGenDepthBuffer.getPixels(),width,height),0,0)
 }
 
 // const multiplyMatrix = gpu.createKernel(function(a, b) {
