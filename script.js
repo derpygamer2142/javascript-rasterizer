@@ -94,6 +94,7 @@ function main() {
         //console.log(m3d.addVects(camPos,heldVec))
         camPos = [camPos[0]+heldVec[0],camPos[1]+heldVec[1],camPos[2]+heldVec[2]]
     } 
+    
     // camPos[0] += ((+ input.d) - (+ input.a)) * dt * SPEED
     // camPos[1] += ((+ input.e) - (+ input.q)) * dt * SPEED
     // camPos[2] += ((+ input.w) - (+ input.s)) * dt * SPEED
@@ -103,31 +104,22 @@ function main() {
     
 
     const camMatrix = m3d.genRotationMatrix(camRotation)
+    const camVec = m3d.rotate([0,0,1],[0,0,0],camMatrix)
     //console.log(m3d.genRotationMatrix(camRotation))
 
     let toDraw = [...toProject]
     for (let i = 0; i < toProject.length; i++) {
-        //toDraw[i] = [toDraw[i][0] - camPos[0],toDraw[i][1] - camPos[1],toDraw[i][2] - camPos[2]]
-        toDraw[i] = m3d.rotate(toDraw[i],camPos,camMatrix)
-        // toDraw[i].push()
-        // toDraw[i][1] -= camPos[1]
-        // toDraw[i][2] -= camPos[2]
+        let rotated = Array.from(m3d.rotate(toDraw[i],camPos,camMatrix))
+        toDraw[i] = rotated.concat(Array.from(m3d.project(rotated,FOV)))
+        
+        
     }
-    //console.log(toDraw)
-    
-    ctx.fillStyle = "white"
-    ctx.fillRect(0,0,WIDTH,HEIGHT)
-    ctx.fillStyle = "black"
-    let projected = []
-    for (let i = 0; i < toDraw.length; i += 3) {
-        projected.push([m3d.project(toDraw[i],FOV),m3d.project(toDraw[i+1],FOV),m3d.project(toDraw[i+2],FOV)])
-    }
-    //fillTri(projected[0][0],projected[0][1],projected[0][2])
-    console.log(toDraw)
-
+    m3d.genDepthBuffer(toDraw,WIDTH,HEIGHT,true)
+    //console.log(m3d.genDepthBuffer(toDraw,5,5))
+    //console.log(m3d.pixel(toDraw[0],toDraw[1],toDraw[2],[0,0],toDraw[0].slice(3),toDraw[1].slice(3),toDraw[2].slice(3)))
     ctx.font = `${HEIGHT*0.045}px Comic Sans MS`
     printLines([`Cam pos: ${camPos[0].toFixed(2)}, ${camPos[1].toFixed(2)}, ${camPos[2].toFixed(2)}`, `Cam rotation ${camRotation[0].toFixed(2)}, ${camRotation[1].toFixed(2)}, ${camRotation[2].toFixed(2)}`, "DT: " + dt.toFixed(2),"FPS: " + (1/dt).toFixed(2)],0,HEIGHT*0.95,HEIGHT*0.045)
-    //console.log(toProject[0])
+
 }
 
 setInterval(main,15)
