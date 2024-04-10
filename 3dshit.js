@@ -1,3 +1,5 @@
+// warning: this code is messing and contains 1 more peter griffin than you will find in your average js file
+
 const canv = document.getElementById("screen");
 const ctx = canv.getContext("2d");
 
@@ -69,12 +71,17 @@ const project = gpu.createKernel(function(coords,FOV) {
     return (FOV*coords[this.thread.x])*onedivz
 }).setOutput([2])
 
-
+gpu.addFunction(function project(coords,FOV) {
+    let onedivz = 1/coords[2]
+    return [(FOV*coords[0])*onedivz,(FOV*coords[1])*onedivz]
+})
 
 const rotate = gpu.createKernel(function(coords,coordsb,matrix) {
     return ((matrix[this.thread.x*3]*coords[0]) + (matrix[(this.thread.x*3) + 1]*coords[1]) + (matrix[(this.thread.x*3) + 2]*coords[2])) + coordsb[this.thread.x]
 
 }).setOutput([3])
+
+
 
 const genRotationMatrix = gpu.createKernel(function(rotation) {
     let sx = Math.sin(rotation[0])
@@ -136,16 +143,42 @@ const dot = gpu.createKernel(function(a,b) {
     return ((a[0]*b[0]) + (a[1]*b[1]) + (a[2]*b[2]))
 }).setOutput([1])
 
-const edge = gpu.createKernel(function(a,b,c) {
-    return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
-}).setOutput([1])
+// const edge = gpu.createKernel(function(a,b,c) {
+//     return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+// }).setOutput([1])
+gpu.addFunction(function edge(c,b,a) {
+        return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
+        
+})
+
+gpu.addFunction(function pixel(a,b,c,p,pa,pb,pc) {
+    // [depth,ABP,BCP,CAP]
+    const minX = Math.min(Math.min(pa[0],pb[0]),pc[0])
+    const minY = Math.min(Math.min(pa[1],pb[1]),pc[1])
+    const maxX = Math.max(Math.max(pa[0],pb[0]),pc[0])
+    const maxY = Math.max(Math.max(pa[1],pb[1]),pc[1])
+    if ((p[0] > minX) && (p[0] < maxX) && (p[1] > minY) && (p[1] < maxY)) {
+        let ABC = edge(a,b,c)
+        let ABP = edge(a,b,p)
+        let BCP = edge(b,c,p)
+        let CAP = edge(c,a,p)
+        if (ABP >= 0 && BCP >= 0 && CAP >= 0) {
+            
+        }
+        else {
+            return [-1, -1, -1, -1]
+        }
+    }
+    else {
+        return [-1,-1,-1,-1]
+    }
+
+    
+})
 
 const internalTri = gpu.createKernel(function(a,b,c,color) {
     // https://jtsorlinis.github.io/rendering-tutorial/
-    function edge(c,b,a) {
-        return (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0])
-        
-    }
+    
     const minX = Math.min(Math.min(a[0],b[0]),c[0])
     const minY = Math.min(Math.min(a[1],b[1]),c[1])
 
@@ -158,7 +191,7 @@ const internalTri = gpu.createKernel(function(a,b,c,color) {
         return col
     }
     //this.color(1,1,1)
-    return [255,255,255]
+    return [-1,-1,-1]
 
 },{
     constants: { size: 5 },
@@ -166,15 +199,6 @@ const internalTri = gpu.createKernel(function(a,b,c,color) {
     dynamicOutput: true,
 })//.setGraphical(true)
 
-function drawTri(a,b,c,color) {
-    //internalTri.setOutput([5,5])
-    let [x, y] = [Math.floor(Math.max(a[0],b[0],c[0])-Math.min(a[0],b[0],c[0])),Math.floor(Math.max(a[1],b[1],c[1])-Math.min(a[1],b[1],c[1]))]
-    internalTri.setOutput([x,y])
-    //internalTri(a,b,c,color)
-    //return internalTri.getPixels()
-    return [internalTri(a,b,c,color),x,y,internalTri.output]
-
-}
 
 
 // const multiplyMatrix = gpu.createKernel(function(a, b) {
@@ -191,4 +215,4 @@ function drawTri(a,b,c,color) {
 
 
 
-export { project, rotate, genRotationMatrix, normalize, addVects, multVect, drawTri, edge, dot }; // note to self: typescript formatter doesn't like it if you use export {func as "string"}
+export { project, rotate, genRotationMatrix, normalize, addVects, multVect, dot }; // note to self: typescript formatter doesn't like it if you use export {func as "string"}
