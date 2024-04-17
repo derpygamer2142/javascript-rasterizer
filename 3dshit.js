@@ -157,6 +157,32 @@ gpu.addFunction(function edge(c,b,a) {
         
 })
 
+const cross = gpu.createKernel(function(a,b) {
+    return (a[(this.thread.x+1) % 3] * b[(this.thread.x+2) % 3]) - (a[(this.thread.x+2) % 3] * b[(this.thread.x+1) % 3])
+}).setOutput([3])
+
+gpu.addFunction(function cross(a,b,e) {
+    let n = [0,0,0]
+    if (e == -1) {
+        for (let i = 0; i < 3; i++) {
+        n[i] = (a[(i+1) % 3] * b[(i+2) % 3]) - (a[(i+2) % 3] * b[(i+1) % 3])
+        }
+        return n
+    }
+    else {
+        return (a[(e+1) % 3] * b[(e+2) % 3]) - (a[(e+2) % 3] * b[(e+1) % 3])
+    }
+    
+    
+})
+
+const triNormal = gpu.createKernel(function(a,b,c) {
+    let u = [b[0]-a[0],b[1]-a[1],b[2]-a[2]]
+    let v = [c[0]-a[0],c[1]-a[1],c[2]-a[2]]
+
+    return cross(u,v,this.thread.x)
+}).setOutput(3)
+
 gpu.addFunction(function pixel(a,b,c,p,pa,pb,pc) {
     // [depth, u, v, w]
     const minX = Math.min(Math.min(pa[0],pb[0]),pc[0])
@@ -186,6 +212,7 @@ gpu.addFunction(function pixel(a,b,c,p,pa,pb,pc) {
     
 })
 
+
 const intGenDepthBuffer = gpu.createKernel(function(triangles,length,width,height) {
     /*
     triangle list format
@@ -204,8 +231,9 @@ const intGenDepthBuffer = gpu.createKernel(function(triangles,length,width,heigh
 
     let heldZ = 99999 // i could just have this use toReturn[0] but i can't be bothered
     let toReturn = [-1,-1,-1,-1]
+    let zs = [5,5]
 
-    for (let i = 0; i < length; i += 15) {
+    for (let i = 0; i < length+2; i += 15) {
         // it took me 20 minutes to remember gpu.js flattens input arrays : |
         let t1 = [triangles[i],triangles[i+1],triangles[i+2]]
         let t2 = [triangles[i+5],triangles[i+6],triangles[i+7]]
@@ -216,20 +244,20 @@ const intGenDepthBuffer = gpu.createKernel(function(triangles,length,width,heigh
         
         
         let heldP = pixel(t1,t2,t3,[this.thread.x-(width/2),this.thread.y-(height/2),0],p1,p2,p3)
-        if (heldP[0] != -1) {
             if (heldP[0] < heldZ) {
+                zs[i/15] = heldP[0]
                 heldZ = heldP[0]
                 toReturn = heldP
 
             }
-        }
+        
     }
-    //return toReturn
+    //return zs
     if (toReturn[0] == -1) {
         this.color(1,1,1)
     }
     let b = (toReturn[0]/50) / ((toReturn[0]/50)+1)
-    b = 1 - b // b is the visual output
+    b = b // b is the visual output
     this.color(b,b,b)
 
 
@@ -242,6 +270,7 @@ function genDepthBuffer(triangles,width,height) {
     intGenDepthBuffer.setOutput([width,height]) // make the function size dynamic
     intGenDepthBuffer(triangles,triangles.length,width,height)
     ctx.putImageData(new ImageData(intGenDepthBuffer.getPixels(),width,height),0,0)
+    //console.log(intGenDepthBuffer(triangles,triangles.length,width,height).flat(Infinity))
 }
 
 // const multiplyMatrix = gpu.createKernel(function(a, b) {

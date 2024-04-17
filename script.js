@@ -15,8 +15,8 @@ const input = new Input()
 
 const CALCWIDTH = 1920
 const CALCHEIGHT = 1080
-const WIDTH = window.innerWidth;
-const HEIGHT = window.innerHeight;
+const WIDTH = 100//window.innerWidth;
+const HEIGHT = 50// window.innerHeight;
 const HALFW = WIDTH/2
 const HALFH = HEIGHT/2
 canv.width = WIDTH
@@ -24,19 +24,19 @@ canv.height = HEIGHT
 console.log(WIDTH, HEIGHT)
 
 function toOriginX(x) {
-    return ((x - HALFW)/CALCWIDTH) * WIDTH
+    return ((x/WIDTH)-0.5)*CALCWIDTH
 }
 
 function toOriginY(y) {
-    return ((y - HALFH)/CALCHEIGHT) * HEIGHT
+    return (0.5-(y/HEIGHT))*CALCHEIGHT
 }
 
 function toScreenX(x) {
-    return ((x/WIDTH)*CALCWIDTH) + HALFW
+    return ((x/CALCWIDTH)*WIDTH) + HALFW
 }
 
 function toScreenY(y) {
-    return HALFH - ((y/HEIGHT)*CALCHEIGHT)
+    return HALFH - ((y/CALCHEIGHT)*HEIGHT)
 }
 
 function toScreen(coords) {
@@ -61,7 +61,6 @@ function fillTri(a,b,c) {
 function printLines(text,x,y,size) {
     text.reverse()
     ctx.font = `${size}px Comic Sans MS`
-    ctx.fillStyle = "black"
     for (let i = 0;i < text.length; i++) {
         ctx.fillText(text[i],x,y-(i*(size*1.03)))
     }
@@ -76,8 +75,8 @@ function printLines(text,x,y,size) {
 // initial values and stuff
 const FOV = 300
 const TORAD = Math.PI/180
-let toProject = [[-25,0,45],[1,50,45],[25,0,45]]
-let camPos = [0,0,0]
+let toProject = [[-25,0,45],[0,50,65],[25,0,45]] // ,[-25,50,85],[1,100,85],[25,50,85]
+let camPos = [0,-25,15]
 let camRotation = [0,0,0]
 let lastTime = Date.now()/1000
 let dt = 0
@@ -115,11 +114,12 @@ function main() {
         let rotated = Array.from(m3d.rotate(toDraw[i],camPos,camMatrix))
         toDraw[i] = rotated.concat(Array.from(m3d.project(rotated,FOV)))
         
-        
     }
+    console.log(toDraw.flat(Infinity))
     m3d.genDepthBuffer(toDraw,WIDTH,HEIGHT,true)
-    
-    printLines([`Cam pos: ${camPos[0].toFixed(2)}, ${camPos[1].toFixed(2)}, ${camPos[2].toFixed(2)}`, `Cam rotation ${camRotation[0].toFixed(2)}, ${camRotation[1].toFixed(2)}, ${camRotation[2].toFixed(2)}`, "DT: " + dt.toFixed(2),"FPS: " + (1/dt).toFixed(2)],0,HEIGHT*0.95,HEIGHT*0.045)
+
+    ctx.fillStyle = "white"
+    printLines([`Cam pos: ${camPos[0].toFixed(2)}, ${camPos[1].toFixed(2)}, ${camPos[2].toFixed(2)}`, `Cam rotation ${camRotation[0].toFixed(2)}, ${camRotation[1].toFixed(2)}, ${camRotation[2].toFixed(2)}`, `Cam vec: ${camVec[0].toFixed(2)}, ${camVec[1].toFixed(2)}, ${camVec[2].toFixed(2)}`, "DT: " + dt.toFixed(2),"FPS: " + (1/dt).toFixed(2)],0,HEIGHT*0.95,HEIGHT*0.045)
 
 }
 
